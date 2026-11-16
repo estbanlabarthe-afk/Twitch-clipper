@@ -1,0 +1,33 @@
+# Streamers à surveiller (login Twitch, celui dans l'URL twitch.tv/xxx)
+# Ne mets QUE des streamers qui ont une campagne active (clip.farm ou autre) = droits OK.
+streamers:
+  - squeezie
+  # Avec facecam : zone de la cam dans l'image source, en fractions (0 à 1)
+  # x,y = coin haut-gauche ; l,h = largeur, hauteur. Teste avec --fichier + --facecam.
+  # - nom: autre_streamer
+  #   facecam: { x: 0.75, y: 0.0, l: 0.25, h: 0.28 }
+
+recuperation:
+  heures: 24             # clips créés ces X dernières heures
+  max_par_streamer: 5    # les N clips les plus vus
+  vues_min: 50           # ignore les clips sous ce nombre de vues
+
+dossier_sortie: clips
+
+montage:
+  duree_max: 60          # coupe au-delà (secondes)
+  hauteur_facecam: 640   # hauteur de la facecam en haut (le jeu prend le reste)
+  garder_ass: false      # garder le fichier de sous-titres .ass (pour le retoucher)
+
+sous_titres:
+  actif: true
+  modele_whisper: small  # tiny / base / small / medium (plus gros = plus précis, plus lent)
+  langue: fr
+  mots_par_ligne: 3
+  taille: 82
+  police: Arial
+  couleur_mot_actif: "#FFD400"
+  marge_bas: 520         # distance au bas de l'écran (zone de sécurité TikTok)
+
+# Mention obligatoire sur clip.farm depuis le 16/10/2026. Mets "" pour l'enlever.
+mention_pub: "Partenariat rémunéré"

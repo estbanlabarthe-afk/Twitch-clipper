@@ -1,0 +1,7 @@
+.env
+clips/
+deja_faits.json
+__pycache__/
+*.pyc
+.venv/
+test/
