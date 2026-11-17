@@ -21,6 +21,11 @@ def transcrire(video: Path, modele: str = "small", langue: str = "fr") -> list[d
     except ImportError:
         print("  ! faster-whisper non installé : pas de transcription")
         return []
+    try:  # masque l'avertissement « GPU device discovery failed » (normal sur téléphone)
+        import onnxruntime
+        onnxruntime.set_default_logger_severity(3)
+    except Exception:
+        pass
     try:
         import numpy as np
         audio = _audio(video)
