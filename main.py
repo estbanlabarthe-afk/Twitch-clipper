@@ -96,7 +96,15 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
         if not u:
             print(f"✗ {s['nom']} : introuvable sur Twitch")
             continue
-        clips = tw.clips(u["id"], r.get("heures", 24), r.get("tri", "recents"))
+        tri = r.get("tri", "recents")
+        clips = tw.clips(u["id"], r.get("heures", 24), tri)
+        if r.get("heures", 24) > 3:
+            # Twitch ne renvoie que les 100 plus vus de la période : on demande aussi
+            # les 3 dernières heures à part, pour ne pas rater les clips tout neufs
+            vus = {c["id"] for c in clips}
+            clips += [c for c in tw.clips(u["id"], 3, tri) if c["id"] not in vus]
+            cle = "view_count" if tri == "vues" else "created_at"
+            clips.sort(key=lambda c: c[cle], reverse=True)
         clips = [c for c in clips if c["view_count"] >= r.get("vues_min", 0)
                  and c["id"] not in faits][: r.get("max_par_streamer", 5)]
         print(f"→ {u['display_name']} : {len(clips)} nouveau(x) clip(s)")
