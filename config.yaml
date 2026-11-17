@@ -32,6 +32,7 @@ titre:
   couleur_fond: "#7B2FF7"
 
 montage:
+  actif: false           # false = télécharge juste le clip original (pas de chauffe), tu montes toi-même
   duree_max: 60          # coupe au-delà (secondes)
   hauteur_facecam: 620   # hauteur de la facecam en haut (le jeu prend le reste)
   garder_ass: false      # garder le fichier de sous-titres .ass (pour le retoucher)

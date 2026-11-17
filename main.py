@@ -184,6 +184,11 @@ def traiter(c: dict, u: dict, s: dict, cfg: dict, etat: dict, montage: bool = Tr
         }, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  ✓ téléchargé : {brut.name}")
         sortie = None
+        if not montage and final:
+            dest = Path(final) / u["login"]
+            dest.mkdir(parents=True, exist_ok=True)
+            sortie = Path(shutil.move(str(brut), str(dest / f"{jour}_{brut.name}")))
+            print(f"  ✓ rangé (sans montage) : {sortie}")
         if montage:
             fc = choisir_facecam(s.get("facecam", "auto"), brut,
                                  base / "bruts" / f"{nom}_facecam.jpg")
@@ -242,7 +247,8 @@ def depuis_liens(tw: Twitch, cfg: dict, textes: list[str], forcer: bool = False)
         if c["id"] in etat["ids"] and not forcer:
             print("  · déjà monté avant (ajoute --forcer pour le refaire)")
             continue
-        traiter(c, u, reglages.get(u["login"].lower(), {}), cfg, etat, True,
+        traiter(c, u, reglages.get(u["login"].lower(), {}), cfg, etat,
+                cfg.get("montage", {}).get("actif", True),
                 (c.get("creator_name") or "").lower() in moi)
 
 
