@@ -136,9 +136,18 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
             clips += [c for c in tw.clips(u["id"], 3, tri) if c["id"] not in vus]
             cle = "view_count" if tri == "vues" else "created_at"
             clips.sort(key=lambda c: c[cle], reverse=True)
+        # tes propres clips d'abord (ordre conservé à l'intérieur de chaque groupe)
+        moi = {p.lower().strip() for p in str(cfg.get("mon_pseudo") or "").split(",") if p.strip()}
+        a_moi = lambda c: (c.get("creator_name") or "").lower() in moi
+        clips.sort(key=lambda c: not a_moi(c))
         choisis, doublons = [], 0
         for c in clips:
-            if c["id"] in faits or c["view_count"] < r.get("vues_min", 0):
+            if c["id"] in faits:
+                continue
+            if a_moi(c):  # ton clip : jamais filtré (vues, doublon)
+                choisis.append(c)
+                continue
+            if c["view_count"] < r.get("vues_min", 0):
                 continue
             if meme_moment(c, u["id"], etat["moments"] + [moment(x, u["id"]) for x in choisis]):
                 faits.add(c["id"])  # doublon : on le note pour ne plus jamais le regarder
@@ -146,7 +155,7 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                 continue
             choisis.append(c)
             if len(choisis) >= r.get("max_par_streamer", 5):
-                break
+                break  # (tes clips passent même au-delà de cette limite)
         ecrire_etat(etat)
         clips = choisis
         print(f"→ {u['display_name']} : {len(clips)} nouveau(x) clip(s)")
@@ -156,7 +165,9 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
         for c in clips:
             jour = c["created_at"][:10]
             heure = c["created_at"][11:16].replace(":", "h")
-            nom = f"{heure}_{slug(c['title'])}_{c['id'][:8]}"
+            nom = f"{'MOI_' if a_moi(c) else ''}{heure}_{slug(c['title'])}_{c['id'][:8]}"
+            if a_moi(c):
+                print(f"  ⭐ ton clip : {c['title']}")
             base = dossier / u["login"] / jour
             try:
                 brut = telecharger(c["url"], base / "bruts" / f"{nom}.mp4")
