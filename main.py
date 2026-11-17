@@ -19,6 +19,7 @@ from pathlib import Path
 
 import yaml
 
+from clipper import telegram
 from clipper.montage import monter
 from clipper.twitch import Twitch, telecharger
 
@@ -84,6 +85,7 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
     r = cfg.get("recuperation", {})
     dossier = RACINE / cfg.get("dossier_sortie", "clips")
     faits = lire_etat()
+    ecrire_etat(faits)  # le fichier existe toujours (cache GitHub Actions)
 
     infos = tw.utilisateurs([s["nom"] for s in streamers])
     for s in streamers:
@@ -114,6 +116,10 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                                          base / "bruts" / f"{nom}_facecam.jpg")
                     sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, fc, c["title"])
                     print(f"  ✓ monté : {sortie.relative_to(RACINE)}")
+                    if telegram.actif():
+                        telegram.envoyer(sortie, f"🎬 {u['display_name']} : {c['title']}\n"
+                                                 f"{c['view_count']} vues · {c['url']}")
+                        print("  ✓ envoyé sur Telegram")
                 faits.add(c["id"])
                 ecrire_etat(faits)
             except Exception as e:  # un clip raté ne doit pas tout arrêter
@@ -129,11 +135,19 @@ def main():
     p.add_argument("--sans-montage", action="store_true")
     p.add_argument("--fichier", help="monte un fichier local au lieu d'aller sur Twitch")
     p.add_argument("--titre", default="", help="titre affiché dans la bande (avec --fichier)")
+    p.add_argument("--telegram-id", action="store_true",
+                   help="affiche ton TELEGRAM_CHAT_ID (après avoir écrit à ton bot)")
     p.add_argument("--facecam", default="auto",
                    help="auto (défaut), aucune, ou zone x,y,l,h en fractions (ex: 0.75,0,0.25,0.28)")
     a = p.parse_args()
 
+    charger_env()
+    if a.telegram_id:
+        telegram.afficher_chat_id()
+        return
     cfg = yaml.safe_load((RACINE / a.config).read_text(encoding="utf-8"))
+    if os.environ.get("WHISPER_MODELE"):  # ex: "base" sur GitHub Actions (plus rapide)
+        cfg.setdefault("sous_titres", {})["modele_whisper"] = os.environ["WHISPER_MODELE"]
     if a.heures:
         cfg.setdefault("recuperation", {})["heures"] = a.heures
 
@@ -148,7 +162,6 @@ def main():
         print(f"✓ {sortie}")
         return
 
-    charger_env()
     cid, secret = os.environ.get("TWITCH_CLIENT_ID"), os.environ.get("TWITCH_CLIENT_SECRET")
     if not cid or not secret:
         sys.exit("Il manque TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET dans .env (voir README)")

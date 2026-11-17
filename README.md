@@ -23,7 +23,31 @@ Récupère automatiquement les clips Twitch les plus récents de tes streamers e
    - copie le **Client ID**, génère un **Client Secret**
 4. Copie `.env.example` en `.env` et colle les deux valeurs.
 
-## Utilisation
+## Mode automatique 24h/24 (gratuit) ⭐
+
+Le script tourne tout seul **sur les serveurs de GitHub, toutes les 2 h**, et t'envoie les clips montés **sur Telegram**. Pas besoin de laisser ton PC allumé.
+
+**1. Créer ton bot Telegram (2 min)**
+- Sur Telegram, écris à **@BotFather** → `/newbot` → choisis un nom → il te donne un **token**.
+- Écris « salut » à ton nouveau bot.
+- Sur ton PC, mets le token dans `.env` (`TELEGRAM_BOT_TOKEN=...`) puis :
+  ```
+  python main.py --telegram-id
+  ```
+  → il affiche ton `TELEGRAM_CHAT_ID`.
+
+**2. Donner les clés à GitHub**
+Sur github.com, dans ton repo : **Settings → Secrets and variables → Actions → New repository secret**, et ajoute ces 4 secrets :
+`TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+
+**3. Lancer**
+Onglet **Actions → Clipper auto → Run workflow** pour un 1er essai. Ensuite ça tourne tout seul.
+Pour changer les streamers : modifie `config.yaml` directement sur github.com.
+
+**Coût** : 0 €. Le repo privé a 2000 min/mois gratuites ; une passe sans clip ≈ 1 min, un clip ≈ 1-2 min. Avec 5 clips max par passe toutes les 2 h, ça tient. Suivi : Settings → Billing → Usage.
+Si tu dépasses, GitHub met juste en pause jusqu'au mois suivant (pas de facture, sauf si tu as ajouté un moyen de paiement + un budget).
+
+## Utilisation sur ton PC
 
 Mets tes streamers dans `config.yaml`, puis :
 
