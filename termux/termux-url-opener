@@ -28,6 +28,10 @@ while [ -s "$FILE" ]; do
 done
 
 termux-wake-unlock 2>/dev/null || true
+# fait apparaître les vidéos dans la Galerie (nécessite l'appli Termux:API)
+if command -v termux-media-scan >/dev/null; then
+  termux-media-scan -r /sdcard/Movies/TwitchClipper >/dev/null 2>&1 && echo "✓ Ajouté à la Galerie"
+fi
 echo
 echo "✅ Fini ! Vidéo(s) dans Mes fichiers > Movies > TwitchClipper. Tu peux fermer."
 read -r -t 60 _ || true
