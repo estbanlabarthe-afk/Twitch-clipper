@@ -1,6 +1,6 @@
 # Streamers à surveiller (login Twitch, celui dans l'URL twitch.tv/xxx)
 streamers:
-  - squeezie
+  - jltomy
   # La facecam est détectée automatiquement sur chaque clip (aperçu dans bruts/*_facecam.jpg).
   # Si la détection se trompe pour un streamer, force la zone (fractions 0 à 1,
   # x,y = coin haut-gauche ; l,h = largeur, hauteur) ou désactive-la :
