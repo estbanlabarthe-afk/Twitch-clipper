@@ -8,7 +8,7 @@ streamers:
   #   facecam: { x: 0.75, y: 0.0, l: 0.25, h: 0.28 }   # ou: facecam: aucune
 
 # Ton pseudo Twitch : tes propres clips passent en priorité (plusieurs : "pseudo1, pseudo2")
-mon_pseudo: ""
+mon_pseudo: "est3ban_off"
 
 recuperation:
   heures: 168            # clips créés ces X dernières heures (168 = 1 semaine)
