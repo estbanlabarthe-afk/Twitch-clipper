@@ -47,8 +47,8 @@ class Twitch:
         data = self._get("/streams", {"user_id": user_ids, "type": "live"})["data"]
         return {s["user_id"] for s in data}
 
-    def clips(self, broadcaster_id: str, heures: float, max_clips: int = 20) -> list[dict]:
-        """Clips créés ces X dernières heures, triés par vues (décroissant)."""
+    def clips(self, broadcaster_id: str, heures: float, tri: str = "recents") -> list[dict]:
+        """Clips créés ces X dernières heures, du plus récent au plus ancien (ou par vues)."""
         fin = datetime.now(timezone.utc)
         debut = fin - timedelta(hours=heures)
         iso = "%Y-%m-%dT%H:%M:%SZ"
@@ -56,9 +56,10 @@ class Twitch:
             "broadcaster_id": broadcaster_id,
             "started_at": debut.strftime(iso),
             "ended_at": fin.strftime(iso),
-            "first": min(max(max_clips, 1), 100),
+            "first": 100,
         })["data"]
-        return sorted(data, key=lambda c: c["view_count"], reverse=True)
+        cle = "view_count" if tri == "vues" else "created_at"
+        return sorted(data, key=lambda c: c[cle], reverse=True)
 
 
 def telecharger(url: str, destination: Path) -> Path:

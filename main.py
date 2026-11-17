@@ -1,4 +1,4 @@
-"""Twitch Clipper : récupère les meilleurs clips Twitch et les monte en 9:16.
+"""Twitch Clipper : récupère les clips Twitch les plus récents et les monte en 9:16.
 
 Exemples :
   python main.py                       # une passe sur tous les streamers de config.yaml
@@ -72,14 +72,15 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
         if not u:
             print(f"✗ {s['nom']} : introuvable sur Twitch")
             continue
-        clips = tw.clips(u["id"], r.get("heures", 24), r.get("max_par_streamer", 5) * 4)
-        clips = [c for c in clips if c["view_count"] >= r.get("vues_min", 50)
+        clips = tw.clips(u["id"], r.get("heures", 24), r.get("tri", "recents"))
+        clips = [c for c in clips if c["view_count"] >= r.get("vues_min", 0)
                  and c["id"] not in faits][: r.get("max_par_streamer", 5)]
         print(f"→ {u['display_name']} : {len(clips)} nouveau(x) clip(s)")
 
         for c in clips:
             jour = c["created_at"][:10]
-            nom = f"{c['view_count']}vues_{slug(c['title'])}_{c['id'][:8]}"
+            heure = c["created_at"][11:16].replace(":", "h")
+            nom = f"{heure}_{slug(c['title'])}_{c['id'][:8]}"
             base = dossier / u["login"] / jour
             try:
                 brut = telecharger(c["url"], base / "bruts" / f"{nom}.mp4")

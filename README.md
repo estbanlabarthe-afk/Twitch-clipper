@@ -1,12 +1,12 @@
 # Twitch Clipper
 
-Récupère automatiquement les clips Twitch les plus vus de tes streamers et les monte en **9:16 (1080x1920)**, prêts pour TikTok / YouTube Shorts :
+Récupère automatiquement les clips Twitch les plus récents de tes streamers et les monte en **9:16 (1080x1920)**, prêts pour TikTok / YouTube Shorts :
 - fond flouté **ou** facecam en haut + jeu en bas
 - sous-titres karaoké automatiques (Whisper, en local, gratuit)
-- mention « Partenariat rémunéré » (obligatoire sur clip.farm)
+- texte optionnel en haut de la vidéo (`mention_pub` dans `config.yaml`)
 - format vérifié : H.264, 30 fps, AAC, faststart
 
-> ⚠️ Ne clippe que des streamers qui ont une **campagne active** (clip.farm ou autre). Sinon, risque de droits d'auteur.
+> ⚠️ Les clips restent le contenu des streamers : demande-leur l'accord avant de reposter, sinon risque de signalement pour droits d'auteur.
 
 ## Installation (Windows, une seule fois)
 
@@ -29,7 +29,7 @@ Mets tes streamers dans `config.yaml`, puis :
 
 | Commande | Effet |
 |---|---|
-| `python main.py` | une passe : meilleurs clips des dernières 24 h |
+| `python main.py` | une passe : les 5 clips les plus récents (24 h max) |
 | `python main.py --boucle 10` | relance toutes les 10 min (à laisser tourner pendant les lives) |
 | `python main.py --streamer nom` | un seul streamer |
 | `python main.py --heures 3` | seulement les clips des 3 dernières heures |

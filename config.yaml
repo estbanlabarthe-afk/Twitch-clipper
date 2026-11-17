@@ -1,5 +1,4 @@
 # Streamers à surveiller (login Twitch, celui dans l'URL twitch.tv/xxx)
-# Ne mets QUE des streamers qui ont une campagne active (clip.farm ou autre) = droits OK.
 streamers:
   - squeezie
   # Avec facecam : zone de la cam dans l'image source, en fractions (0 à 1)
@@ -9,8 +8,9 @@ streamers:
 
 recuperation:
   heures: 24             # clips créés ces X dernières heures
-  max_par_streamer: 5    # les N clips les plus vus
-  vues_min: 50           # ignore les clips sous ce nombre de vues
+  max_par_streamer: 5    # nombre de clips récupérés à chaque passe
+  tri: recents           # recents = les plus récents d'abord ; vues = les plus vus
+  vues_min: 0            # ignore les clips sous ce nombre de vues
 
 dossier_sortie: clips
 
@@ -29,5 +29,5 @@ sous_titres:
   couleur_mot_actif: "#FFD400"
   marge_bas: 520         # distance au bas de l'écran (zone de sécurité TikTok)
 
-# Mention obligatoire sur clip.farm depuis le 16/10/2026. Mets "" pour l'enlever.
-mention_pub: "Partenariat rémunéré"
+# Texte affiché en haut de la vidéo (ex: "Partenariat rémunéré"). Vide = rien.
+mention_pub: ""
