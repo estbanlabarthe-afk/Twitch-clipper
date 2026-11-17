@@ -30,7 +30,7 @@ montage:
   garder_ass: false      # garder le fichier de sous-titres .ass (pour le retoucher)
 
 sous_titres:
-  actif: true
+  actif: false          # sous-titres karaoké (true pour les remettre)
   modele_whisper: small  # tiny / base / small / medium (plus gros = plus précis, plus lent)
   langue: fr
   mots_par_ligne: 3
