@@ -1,10 +1,11 @@
 # Streamers à surveiller (login Twitch, celui dans l'URL twitch.tv/xxx)
 streamers:
   - squeezie
-  # Avec facecam : zone de la cam dans l'image source, en fractions (0 à 1)
-  # x,y = coin haut-gauche ; l,h = largeur, hauteur. Teste avec --fichier + --facecam.
+  # La facecam est détectée automatiquement sur chaque clip (aperçu dans bruts/*_facecam.jpg).
+  # Si la détection se trompe pour un streamer, force la zone (fractions 0 à 1,
+  # x,y = coin haut-gauche ; l,h = largeur, hauteur) ou désactive-la :
   # - nom: autre_streamer
-  #   facecam: { x: 0.75, y: 0.0, l: 0.25, h: 0.28 }
+  #   facecam: { x: 0.75, y: 0.0, l: 0.25, h: 0.28 }   # ou: facecam: aucune
 
 recuperation:
   heures: 24             # clips créés ces X dernières heures

@@ -52,6 +52,25 @@ def ecrire_etat(faits: set[str]):
     ETAT.write_text(json.dumps(sorted(faits)), encoding="utf-8")
 
 
+def choisir_facecam(reglage, video: Path, apercu: Path | None = None):
+    """reglage : "auto" (défaut) / "aucune" / {x, y, l, h}."""
+    if isinstance(reglage, dict):
+        return reglage
+    if str(reglage).lower() in ("aucune", "non", "false", "none"):
+        return None
+    try:
+        from clipper.facecam import detecter
+    except ImportError:
+        print("  ! opencv non installé : pas de détection de facecam")
+        return None
+    zone = detecter(video, apercu)
+    if zone:
+        print(f"  ✓ facecam détectée : {zone['x']},{zone['y']},{zone['l']},{zone['h']}")
+    else:
+        print("  · pas de facecam détectée : fond flouté")
+    return zone
+
+
 def normaliser_streamers(liste) -> list[dict]:
     """Accepte 'nom' ou {nom: ..., facecam: {...}}."""
     return [{"nom": s} if isinstance(s, str) else s for s in liste or []]
@@ -91,7 +110,9 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                 }, ensure_ascii=False, indent=2), encoding="utf-8")
                 print(f"  ✓ téléchargé : {brut.name}")
                 if montage:
-                    sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, s.get("facecam"), c["title"])
+                    fc = choisir_facecam(s.get("facecam", "auto"), brut,
+                                         base / "bruts" / f"{nom}_facecam.jpg")
+                    sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, fc, c["title"])
                     print(f"  ✓ monté : {sortie.relative_to(RACINE)}")
                 faits.add(c["id"])
                 ecrire_etat(faits)
@@ -108,7 +129,8 @@ def main():
     p.add_argument("--sans-montage", action="store_true")
     p.add_argument("--fichier", help="monte un fichier local au lieu d'aller sur Twitch")
     p.add_argument("--titre", default="", help="titre affiché dans la bande (avec --fichier)")
-    p.add_argument("--facecam", help="zone facecam x,y,l,h en fractions (ex: 0.75,0.7,0.25,0.3)")
+    p.add_argument("--facecam", default="auto",
+                   help="auto (défaut), aucune, ou zone x,y,l,h en fractions (ex: 0.75,0,0.25,0.28)")
     a = p.parse_args()
 
     cfg = yaml.safe_load((RACINE / a.config).read_text(encoding="utf-8"))
@@ -116,11 +138,12 @@ def main():
         cfg.setdefault("recuperation", {})["heures"] = a.heures
 
     if a.fichier:
-        fc = None
-        if a.facecam:
-            x, y, l, h = (float(v) for v in a.facecam.split(","))
-            fc = {"x": x, "y": y, "l": l, "h": h}
         src = Path(a.fichier)
+        reglage = a.facecam
+        if "," in reglage:
+            x, y, l, h = (float(v) for v in reglage.split(","))
+            reglage = {"x": x, "y": y, "l": l, "h": h}
+        fc = choisir_facecam(reglage, src, src.with_name(src.stem + "_facecam.jpg"))
         sortie = monter(src, src.with_name(src.stem + "_9x16.mp4"), cfg, fc, a.titre)
         print(f"✓ {sortie}")
         return

@@ -2,3 +2,5 @@ requests>=2.31
 PyYAML>=6.0
 yt-dlp>=2025.1.1
 faster-whisper>=1.0  # sous-titres (optionnel mais conseillé)
+opencv-python-headless>=4.8,<5  # détection auto de la facecam (OpenCV 5 n'a plus le détecteur de visages)
+numpy

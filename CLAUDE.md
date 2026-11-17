@@ -8,7 +8,8 @@ Récupérer automatiquement les clips Twitch les plus récents (option : les plu
 ## Structure
 - `main.py` : CLI (passe unique, `--boucle`, `--fichier`…)
 - `clipper/twitch.py` : API Helix (client credentials) + téléchargement yt-dlp
-- `clipper/montage.py` : ffmpeg, mises en page `flou` / `facecam`
+- `clipper/facecam.py` : détection auto de la cam (visage fixe OpenCV + bords fixes autour)
+- `clipper/montage.py` : ffmpeg, mises en page `flou` / `facecam` (cam / bande titre / jeu)
 - `clipper/sous_titres.py` : faster-whisper + fichier .ass karaoké + mention pub
 - `config.yaml` : streamers, réglages ; `.env` : clés Twitch (jamais commitées)
 

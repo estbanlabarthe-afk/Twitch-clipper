@@ -37,15 +37,29 @@ def _filtre_flou(info: dict, barre: int, couleur: str) -> tuple[str, int]:
     return f + ",setsar=1[v]", y_barre + barre // 2
 
 
-def _filtre_facecam(fc: dict, haut_cam: int, barre: int, couleur: str) -> tuple[str, int]:
+def _x_jeu(info: dict, fc: dict, larg: int) -> int:
+    """Position x de la découpe du jeu : centrée, mais décalée (max 15 %)
+    pour ne pas montrer la facecam une 2e fois."""
+    w = info["w"]
+    x = (w - larg) // 2
+    cam0, cam1 = fc["x"] * w, (fc["x"] + fc["l"]) * w
+    if cam0 < x + larg and cam1 > x:  # la cam déborde dans la découpe
+        cible = cam0 - larg if (cam0 + cam1) / 2 > w / 2 else cam1
+        x = int(min(max(cible, x - 0.15 * w), x + 0.15 * w))
+    return int(min(max(x, 0), w - larg))
+
+
+def _filtre_facecam(info: dict, fc: dict, haut_cam: int, barre: int,
+                    couleur: str) -> tuple[str, int]:
     """Facecam en haut, bande titre, jeu (centre de l'image) en bas.
     fc = zone de la facecam en fraction de l'image source : x, y, l, h (0 à 1)."""
     haut_jeu = H - haut_cam - barre
+    larg = min(info["w"], int(info["h"] * L / haut_jeu)) // 2 * 2
     return (f"[0:v]split=2[a][b];"
             f"[a]crop=iw*{fc['l']}:ih*{fc['h']}:iw*{fc['x']}:ih*{fc['y']},"
             f"scale={L}:{haut_cam}:force_original_aspect_ratio=increase,crop={L}:{haut_cam},"
             f"pad={L}:{haut_cam + barre}:0:0:color={couleur}[cam];"
-            f"[b]crop=min(iw\\,ih*{L}/{haut_jeu}):ih,"
+            f"[b]crop={larg}:ih:{_x_jeu(info, fc, larg)}:0,"
             f"scale={L}:{haut_jeu}:force_original_aspect_ratio=increase,crop={L}:{haut_jeu}[jeu];"
             f"[cam][jeu]vstack=inputs=2,setsar=1[v]"), haut_cam + barre // 2
 
@@ -61,7 +75,7 @@ def monter(source: Path, sortie: Path, cfg: dict, facecam: dict | None = None,
     barre = int(tc.get("hauteur", 170)) if titre else 0
     couleur = _couleur_ff(tc.get("couleur_fond", "#7B2FF7"))
     if facecam:
-        filtre, titre_y = _filtre_facecam(facecam, int(m.get("hauteur_facecam", 620)), barre, couleur)
+        filtre, titre_y = _filtre_facecam(info, facecam, int(m.get("hauteur_facecam", 620)), barre, couleur)
     else:
         filtre, titre_y = _filtre_flou(info, barre, couleur)
 

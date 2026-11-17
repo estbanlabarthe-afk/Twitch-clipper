@@ -44,7 +44,14 @@ clips/<streamer>/<date>/
 ```
 Les clips déjà traités sont notés dans `deja_faits.json` (pas de doublons).
 
-## Régler la facecam
+## Facecam automatique
+
+Pour chaque clip, le script **trouve la cam tout seul** : il cherche un visage qui reste au même endroit, puis le cadre fixe autour.
+- Aperçu de ce qu'il a trouvé : `bruts/<clip>_facecam.jpg` (rectangle jaune).
+- Pas de cam trouvée (ou cam plein écran) → mise en page fond flouté.
+- Limites : visage de profil ou caché, cam sans bord net sur un jeu très statique. Dans ce cas, règle-la à la main (ci-dessous).
+
+## Régler la facecam à la main
 
 La zone se donne en fractions de l'image (0 à 1) : `x, y` = coin haut-gauche, `l, h` = largeur, hauteur.
 Exemple : cam en haut à droite qui prend un quart de la largeur → `0.75, 0, 0.25, 0.28`.
