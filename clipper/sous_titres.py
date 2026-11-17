@@ -1,24 +1,43 @@
 """Transcription (faster-whisper) + génération d'un fichier .ass karaoké."""
+import subprocess
 from pathlib import Path
 
 
+def _audio(video: Path):
+    """Son du clip en 16 kHz mono (format attendu par Whisper), lu par ffmpeg.
+    Évite PyAV, dont les nouvelles versions cassent faster-whisper."""
+    import numpy as np
+    brut = subprocess.run(
+        ["ffmpeg", "-nostdin", "-loglevel", "error", "-i", str(video),
+         "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+        capture_output=True, check=True).stdout
+    return np.frombuffer(brut, np.int16).astype(np.float32) / 32768.0
+
+
 def transcrire(video: Path, modele: str = "small", langue: str = "fr") -> list[dict]:
-    """Renvoie [{mot, debut, fin}, ...]. Liste vide si faster-whisper absent."""
+    """Renvoie [{mot, debut, fin}, ...]. Liste vide si pas possible (le clip sera monté sans sous-titres)."""
     try:
         from faster_whisper import WhisperModel
     except ImportError:
         print("  ! faster-whisper non installé : pas de sous-titres")
         return []
-    model = WhisperModel(modele, device="auto", compute_type="int8")
-    segments, _ = model.transcribe(str(video), language=langue or None,
-                                   word_timestamps=True, vad_filter=True)
-    mots = []
-    for seg in segments:
-        for w in seg.words or []:
-            texte = w.word.strip()
-            if texte:
-                mots.append({"mot": texte, "debut": w.start, "fin": w.end})
-    return mots
+    try:
+        audio = _audio(video)
+        if audio.size < 16000 // 2:  # moins d'une demi-seconde de son
+            return []
+        model = WhisperModel(modele, device="auto", compute_type="int8")
+        segments, _ = model.transcribe(audio, language=langue or None,
+                                       word_timestamps=True, vad_filter=True)
+        mots = []
+        for seg in segments:
+            for w in seg.words or []:
+                texte = w.word.strip()
+                if texte:
+                    mots.append({"mot": texte, "debut": w.start, "fin": w.end})
+        return mots
+    except Exception as e:
+        print(f"  ! sous-titres impossibles ({e}) : clip monté sans")
+        return []
 
 
 def _t(sec: float) -> str:
