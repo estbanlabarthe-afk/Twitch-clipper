@@ -43,15 +43,45 @@ def slug(texte: str, n: int = 40) -> str:
     return t[:n] or "clip"
 
 
-def lire_etat() -> set[str]:
+def lire_etat() -> dict:
+    """{"ids": clips déjà traités, "moments": moments du live déjà montés}."""
     try:
-        return set(json.loads(ETAT.read_text(encoding="utf-8")))
+        data = json.loads(ETAT.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):
-        return set()
+        data = {}
+    if isinstance(data, list):  # ancien format : juste la liste des ids
+        data = {"ids": data}
+    return {"ids": set(data.get("ids", [])), "moments": data.get("moments", [])}
 
 
-def ecrire_etat(faits: set[str]):
-    ETAT.write_text(json.dumps(sorted(faits)), encoding="utf-8")
+def ecrire_etat(etat: dict):
+    ETAT.write_text(json.dumps({"ids": sorted(etat["ids"]),
+                                "moments": etat["moments"][-3000:]}), encoding="utf-8")
+
+
+def _date(iso: str) -> datetime:
+    return datetime.fromisoformat(iso.replace("Z", "+00:00"))
+
+
+def moment(c: dict, streamer_id: str) -> dict:
+    return {"s": streamer_id, "v": c.get("video_id") or "", "o": c.get("vod_offset"),
+            "t": c["created_at"]}
+
+
+def meme_moment(c: dict, streamer_id: str, moments: list[dict]) -> bool:
+    """Vrai si ce clip montre le même moment du live qu'un clip déjà fait
+    (plusieurs viewers qui clippent la même scène)."""
+    m2 = moment(c, streamer_id)
+    for m in moments:
+        if m["s"] != streamer_id:
+            continue
+        if m["v"] and m["v"] == m2["v"] and m["o"] is not None and m2["o"] is not None:
+            if abs(m["o"] - m2["o"]) < 30:  # même VOD, à 30 s près
+                return True
+            continue
+        if abs((_date(m["t"]) - _date(m2["t"])).total_seconds()) < 45:  # créés quasi en même temps
+            return True
+    return False
 
 
 def choisir_facecam(reglage, video: Path, apercu: Path | None = None):
@@ -87,8 +117,9 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
     dossier = RACINE / cfg.get("dossier_sortie", "clips")
     # dossier des vidéos finies (ex: galerie du téléphone). Vide = à côté des bruts.
     final = os.environ.get("DOSSIER_FINAL") or cfg.get("dossier_final") or ""
-    faits = lire_etat()
-    ecrire_etat(faits)  # le fichier existe toujours (cache GitHub Actions)
+    etat = lire_etat()
+    faits = etat["ids"]
+    ecrire_etat(etat)  # le fichier existe toujours (cache GitHub Actions)
 
     infos = tw.utilisateurs([s["nom"] for s in streamers])
     for s in streamers:
@@ -105,9 +136,22 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
             clips += [c for c in tw.clips(u["id"], 3, tri) if c["id"] not in vus]
             cle = "view_count" if tri == "vues" else "created_at"
             clips.sort(key=lambda c: c[cle], reverse=True)
-        clips = [c for c in clips if c["view_count"] >= r.get("vues_min", 0)
-                 and c["id"] not in faits][: r.get("max_par_streamer", 5)]
+        choisis, doublons = [], 0
+        for c in clips:
+            if c["id"] in faits or c["view_count"] < r.get("vues_min", 0):
+                continue
+            if meme_moment(c, u["id"], etat["moments"] + [moment(x, u["id"]) for x in choisis]):
+                faits.add(c["id"])  # doublon : on le note pour ne plus jamais le regarder
+                doublons += 1
+                continue
+            choisis.append(c)
+            if len(choisis) >= r.get("max_par_streamer", 5):
+                break
+        ecrire_etat(etat)
+        clips = choisis
         print(f"→ {u['display_name']} : {len(clips)} nouveau(x) clip(s)")
+        if doublons:
+            print(f"  · {doublons} doublon(s) ignoré(s) (même moment déjà clippé)")
 
         for c in clips:
             jour = c["created_at"][:10]
@@ -140,7 +184,8 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                                                  f"{c['view_count']} vues · {c['url']}")
                         print("  ✓ envoyé sur Telegram")
                 faits.add(c["id"])
-                ecrire_etat(faits)
+                etat["moments"].append(moment(c, u["id"]))
+                ecrire_etat(etat)
             except Exception as e:  # un clip raté ne doit pas tout arrêter
                 print(f"  ✗ {c['id']} : {e}")
 
