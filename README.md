@@ -44,8 +44,7 @@ Sur github.com, dans ton repo : **Settings → Secrets and variables → Actions
 Onglet **Actions → Clipper auto → Run workflow** pour un 1er essai. Ensuite ça tourne tout seul.
 Pour changer les streamers : modifie `config.yaml` directement sur github.com.
 
-**Coût** : 0 €. Le repo privé a 2000 min/mois gratuites ; une passe sans clip ≈ 1 min, un clip ≈ 1-2 min. Avec 5 clips max par passe toutes les 2 h, ça tient. Suivi : Settings → Billing → Usage.
-Si tu dépasses, GitHub met juste en pause jusqu'au mois suivant (pas de facture, sauf si tu as ajouté un moyen de paiement + un budget).
+**Coût** : 0 €, illimité (repo public). ⚠️ GitHub met en pause les tâches automatiques d'un repo public après 60 jours sans aucun commit : si ça arrive, onglet Actions → « Enable workflow ».
 
 ## Sur un téléphone Android 24h/24 (Termux) 📱
 
@@ -71,20 +70,21 @@ proot-distro install ubuntu
 ```
 
 ### B. Installer le script dans Ubuntu
-Le repo est privé : crée d'abord un **jeton GitHub** sur github.com → Settings → Developer settings → Personal access tokens → Fine-grained → accès au repo `Twitch-clipper`, permission **Contents : Read-only**. Copie-le.
 ```
 proot-distro login ubuntu
 ```
 ```
-apt update && apt install -y git
+apt update
 ```
 ```
-git config --global credential.helper store
+apt install -y git
 ```
 ```
-cd /root && git clone https://github.com/estbanlabarthe-afk/Twitch-clipper
+cd /root
 ```
-(identifiant = ton pseudo GitHub, mot de passe = **le jeton**)
+```
+git clone https://github.com/estbanlabarthe-afk/Twitch-clipper
+```
 ```
 bash /root/Twitch-clipper/termux/installer.sh
 ```

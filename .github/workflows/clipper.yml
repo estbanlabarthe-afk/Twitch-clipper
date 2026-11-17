@@ -1,4 +1,4 @@
-# Tourne tout seul sur les serveurs de GitHub (gratuit : 2000 min/mois en repo privé).
+# Tourne tout seul sur les serveurs de GitHub (gratuit et illimité : repo public).
 # Clés à mettre dans Settings > Secrets and variables > Actions :
 #   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 name: Clipper auto
