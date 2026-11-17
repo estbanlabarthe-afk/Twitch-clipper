@@ -8,7 +8,7 @@ streamers:
   #   facecam: { x: 0.75, y: 0.0, l: 0.25, h: 0.28 }   # ou: facecam: aucune
 
 recuperation:
-  heures: 24             # clips créés ces X dernières heures
+  heures: 168            # clips créés ces X dernières heures (168 = 1 semaine)
   max_par_streamer: 5    # nombre de clips récupérés à chaque passe
   tri: recents           # recents = les plus récents d'abord ; vues = les plus vus
   vues_min: 0            # ignore les clips sous ce nombre de vues
