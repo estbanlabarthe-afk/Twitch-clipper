@@ -12,7 +12,7 @@ mon_pseudo: "est3ban_off"
 
 recuperation:
   heures: 168            # clips créés ces X dernières heures (168 = 1 semaine)
-  max_par_streamer: 5    # nombre de clips récupérés à chaque passe
+  max_par_streamer: 1    # nombre de clips récupérés à chaque passe
   tri: recents           # recents = les plus récents d'abord ; vues = les plus vus
   vues_min: 0            # ignore les clips sous ce nombre de vues
 

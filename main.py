@@ -306,7 +306,8 @@ def main():
     while True:
         print(f"\n=== {datetime.now():%H:%M:%S} ===")
         try:
-            une_passe(tw, cfg, a.streamer, not a.sans_montage)
+            une_passe(tw, cfg, a.streamer,
+                      not a.sans_montage and cfg.get("montage", {}).get("actif", True))
         except Exception as e:
             print(f"✗ erreur : {e}")
         if not a.boucle:
