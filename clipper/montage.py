@@ -3,7 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from .sous_titres import ecrire_ass, transcrire
+from .sous_titres import ecrire_ass, phrase_choc, transcrire
 
 L, H = 1080, 1920
 
@@ -71,6 +71,22 @@ def monter(source: Path, sortie: Path, cfg: dict, facecam: dict | None = None,
     info = sonder(source)
     duree = min(info["duree"], float(m.get("duree_max", 60)))
 
+    st = cfg.get("sous_titres", {})
+
+    # Whisper : pour les sous-titres et/ou pour le titre « phrase choc »
+    mots = []
+    source_titre = tc.get("source", "phrase")
+    if st.get("actif", False) or (tc.get("actif", True) and source_titre == "phrase"):
+        print("  … écoute du clip (Whisper)")
+        mots = transcrire(source, st.get("modele_whisper", "small"), st.get("langue", "fr"))
+    if tc.get("actif", True) and source_titre == "phrase":
+        choc = phrase_choc(mots, int(tc.get("max_mots", 12)))
+        if choc:
+            print(f"  ✓ titre : « {choc} »")
+            titre = f"« {choc} »"
+    if not st.get("actif", False):
+        mots = []  # on a écouté pour le titre, mais pas de sous-titres à l'écran
+
     titre = titre.strip() if tc.get("actif", True) else ""
     barre = int(tc.get("hauteur", 170)) if titre else 0
     couleur = _couleur_ff(tc.get("couleur_fond", "#7B2FF7"))
@@ -82,11 +98,6 @@ def monter(source: Path, sortie: Path, cfg: dict, facecam: dict | None = None,
     # sous-titres + mention pub (fichier .ass à côté de la sortie)
     sortie.parent.mkdir(parents=True, exist_ok=True)
     ass = None
-    mots = []
-    if cfg.get("sous_titres", {}).get("actif", True):
-        st = cfg["sous_titres"]
-        print("  … transcription")
-        mots = transcrire(source, st.get("modele_whisper", "small"), st.get("langue", "fr"))
     if mots or titre or cfg.get("mention_pub"):
         ass = ecrire_ass(mots, sortie.with_suffix(".ass"), duree, cfg, titre, titre_y)
         # chemin relatif + cwd : évite les soucis de "C:\" dans le filtre sous Windows

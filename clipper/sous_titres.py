@@ -15,13 +15,14 @@ def _audio(video: Path):
 
 
 def transcrire(video: Path, modele: str = "small", langue: str = "fr") -> list[dict]:
-    """Renvoie [{mot, debut, fin}, ...]. Liste vide si pas possible (le clip sera monté sans sous-titres)."""
+    """Renvoie [{mot, debut, fin, volume}, ...]. Liste vide si pas possible."""
     try:
         from faster_whisper import WhisperModel
     except ImportError:
-        print("  ! faster-whisper non installé : pas de sous-titres")
+        print("  ! faster-whisper non installé : pas de transcription")
         return []
     try:
+        import numpy as np
         audio = _audio(video)
         if audio.size < 16000 // 2:  # moins d'une demi-seconde de son
             return []
@@ -33,11 +34,61 @@ def transcrire(video: Path, modele: str = "small", langue: str = "fr") -> list[d
             for w in seg.words or []:
                 texte = w.word.strip()
                 if texte:
-                    mots.append({"mot": texte, "debut": w.start, "fin": w.end})
+                    morceau = audio[int(w.start * 16000):int(w.end * 16000)]
+                    vol = float(np.sqrt(np.mean(morceau ** 2))) if morceau.size else 0.0
+                    mots.append({"mot": texte, "debut": float(w.start),
+                                 "fin": float(w.end), "volume": vol})
         return mots
     except Exception as e:
-        print(f"  ! sous-titres impossibles ({e}) : clip monté sans")
+        print(f"  ! transcription impossible ({e})")
         return []
+
+
+# Phrases que Whisper « invente » sur de la musique ou du silence
+HALLUCINATIONS = ("amara", "sous-titr", "merci d'avoir regardé", "abonnez-vous",
+                  "abonne-toi", "merci de votre attention", "à bientôt")
+
+
+def phrases(mots: list[dict]) -> list[dict]:
+    """Regroupe les mots en phrases (ponctuation ou pause > 0,8 s)."""
+    res, cour = [], []
+    for i, m in enumerate(mots):
+        cour.append(m)
+        fin_phrase = m["mot"][-1:] in ".!?…"
+        pause = i + 1 < len(mots) and mots[i + 1]["debut"] - m["fin"] > 0.8
+        if fin_phrase or pause or i == len(mots) - 1:
+            res.append({"texte": " ".join(x["mot"] for x in cour).replace(" '", "'"),
+                        "debut": cour[0]["debut"], "fin": cour[-1]["fin"],
+                        "volume": max(x["volume"] for x in cour)})
+            cour = []
+    return res
+
+
+def phrase_choc(mots: list[dict], max_mots: int = 12) -> str:
+    """La phrase la plus marquante du clip : criée fort, exclamation/question,
+    bonne longueur, plutôt vers la fin (le moment fort d'un clip est souvent là)."""
+    liste = phrases(mots)
+    if not liste:
+        return ""
+    vmax = max(p["volume"] for p in liste) or 1.0
+    duree = liste[-1]["fin"] or 1.0
+    meilleur, score_max = "", -99.0
+    for p in liste:
+        texte = p["texte"].strip(" ,")
+        n = len(texte.split())
+        if n < 3 or any(h in texte.lower() for h in HALLUCINATIONS):
+            continue
+        score = 3 * p["volume"] / vmax
+        score += 1.5 if "!" in texte else 0
+        score += 1.0 if "?" in texte else 0
+        score += 1.0 if 4 <= n <= max_mots else (-2 if n > 18 else 0)
+        score += 0.5 * p["debut"] / duree
+        if score > score_max:
+            meilleur, score_max = texte, score
+    mots_titre = meilleur.split()
+    if len(mots_titre) > max_mots:
+        meilleur = " ".join(mots_titre[:max_mots]).rstrip(",;:") + "…"
+    return meilleur.rstrip(".") if not meilleur.endswith("…") else meilleur
 
 
 def _t(sec: float) -> str:

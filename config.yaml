@@ -20,6 +20,9 @@ dossier_final: ""
 # Bande violette avec le titre du clip (entre la cam et le jeu)
 titre:
   actif: true
+  source: phrase         # phrase = la phrase la plus marquante dite dans le clip (Whisper)
+                         # twitch = le titre du clip sur Twitch
+  max_mots: 12
   hauteur: 170
   taille: 58
   couleur_fond: "#7B2FF7"
