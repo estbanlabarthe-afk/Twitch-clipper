@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 import time
 import unicodedata
@@ -116,8 +117,15 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                 if montage:
                     fc = choisir_facecam(s.get("facecam", "auto"), brut,
                                          base / "bruts" / f"{nom}_facecam.jpg")
-                    dest = Path(final) / u["login"] if final else base
-                    sortie = monter(brut, dest / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
+                    # montage dans le dossier du script (Android interdit les fichiers
+                    # non vidéo dans Movies), puis on déplace juste la vidéo finie
+                    sortie = monter(brut, base / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
+                    if final:
+                        dest = Path(final) / u["login"]
+                        dest.mkdir(parents=True, exist_ok=True)
+                        sortie = Path(shutil.move(str(sortie), str(dest / sortie.name)))
+                    if not cfg.get("garder_bruts", True):
+                        brut.unlink(missing_ok=True)  # libère de la place
                     print(f"  ✓ monté : {sortie}")
                     if telegram.actif():
                         telegram.envoyer(sortie, f"🎬 {u['display_name']} : {c['title']}\n"
