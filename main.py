@@ -91,7 +91,7 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                 }, ensure_ascii=False, indent=2), encoding="utf-8")
                 print(f"  ✓ téléchargé : {brut.name}")
                 if montage:
-                    sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, s.get("facecam"))
+                    sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, s.get("facecam"), c["title"])
                     print(f"  ✓ monté : {sortie.relative_to(RACINE)}")
                 faits.add(c["id"])
                 ecrire_etat(faits)
@@ -107,6 +107,7 @@ def main():
     p.add_argument("--boucle", type=float, metavar="MIN", help="relance toutes les MIN minutes")
     p.add_argument("--sans-montage", action="store_true")
     p.add_argument("--fichier", help="monte un fichier local au lieu d'aller sur Twitch")
+    p.add_argument("--titre", default="", help="titre affiché dans la bande (avec --fichier)")
     p.add_argument("--facecam", help="zone facecam x,y,l,h en fractions (ex: 0.75,0.7,0.25,0.3)")
     a = p.parse_args()
 
@@ -120,7 +121,7 @@ def main():
             x, y, l, h = (float(v) for v in a.facecam.split(","))
             fc = {"x": x, "y": y, "l": l, "h": h}
         src = Path(a.fichier)
-        sortie = monter(src, src.with_name(src.stem + "_9x16.mp4"), cfg, fc)
+        sortie = monter(src, src.with_name(src.stem + "_9x16.mp4"), cfg, fc, a.titre)
         print(f"✓ {sortie}")
         return
 

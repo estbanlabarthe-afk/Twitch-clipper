@@ -38,7 +38,8 @@ def _couleur_ass(hex_rgb: str) -> str:
     return f"&H00{h[4:6]}{h[2:4]}{h[0:2]}&".upper()
 
 
-def ecrire_ass(mots: list[dict], sortie: Path, duree: float, cfg: dict) -> Path:
+def ecrire_ass(mots: list[dict], sortie: Path, duree: float, cfg: dict,
+               titre: str = "", titre_y: int = 0) -> Path:
     st = cfg.get("sous_titres", {})
     pub = cfg.get("mention_pub", "")
     taille = st.get("taille", 82)
@@ -57,10 +58,17 @@ def ecrire_ass(mots: list[dict], sortie: Path, duree: float, cfg: dict) -> Path:
         f"&H80000000,1,0,0,0,100,100,0,0,1,7,2,2,80,80,{marge_bas},1",
         "Style: Pub,Arial,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H99000000,1,0,0,0,"
         "100,100,0,0,3,10,0,8,60,60,170,1",
+        f"Style: Titre,{st.get('police', 'Arial')},{cfg.get('titre', {}).get('taille', 58)},"
+        "&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,3,0,5,60,60,0,1",
         "", "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     ]
 
+    if titre:
+        t = _propre(titre)
+        if len(t) > 70:
+            t = t[:67].rsplit(" ", 1)[0] + "…"
+        lignes.append(f"Dialogue: 2,{_t(0)},{_t(duree)},Titre,,0,0,0,,{{\\an5\\pos(540,{titre_y})}}{t.upper()}")
     if pub:
         lignes.append(f"Dialogue: 1,{_t(0)},{_t(duree)},Pub,,0,0,0,,{_propre(pub)}")
 

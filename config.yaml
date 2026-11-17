@@ -14,9 +14,16 @@ recuperation:
 
 dossier_sortie: clips
 
+# Bande violette avec le titre du clip (entre la cam et le jeu)
+titre:
+  actif: true
+  hauteur: 170
+  taille: 58
+  couleur_fond: "#7B2FF7"
+
 montage:
   duree_max: 60          # coupe au-delà (secondes)
-  hauteur_facecam: 640   # hauteur de la facecam en haut (le jeu prend le reste)
+  hauteur_facecam: 620   # hauteur de la facecam en haut (le jeu prend le reste)
   garder_ass: false      # garder le fichier de sous-titres .ass (pour le retoucher)
 
 sous_titres:

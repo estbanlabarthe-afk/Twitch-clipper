@@ -1,7 +1,7 @@
 # Twitch Clipper
 
 Récupère automatiquement les clips Twitch les plus récents de tes streamers et les monte en **9:16 (1080x1920)**, prêts pour TikTok / YouTube Shorts :
-- fond flouté **ou** facecam en haut + jeu en bas
+- facecam en haut, **bande violette avec le titre du clip**, jeu en bas (ou fond flouté si pas de facecam réglée)
 - sous-titres karaoké automatiques (Whisper, en local, gratuit)
 - texte optionnel en haut de la vidéo (`mention_pub` dans `config.yaml`)
 - format vérifié : H.264, 30 fps, AAC, faststart
@@ -34,7 +34,7 @@ Mets tes streamers dans `config.yaml`, puis :
 | `python main.py --streamer nom` | un seul streamer |
 | `python main.py --heures 3` | seulement les clips des 3 dernières heures |
 | `python main.py --sans-montage` | télécharge sans monter |
-| `python main.py --fichier clip.mp4 --facecam 0.75,0,0.25,0.28` | monte un fichier local (pour régler la zone facecam) |
+| `python main.py --fichier clip.mp4 --facecam 0.75,0,0.25,0.28 --titre "Mon titre"` | monte un fichier local (pour régler la zone facecam) |
 
 Résultat :
 ```
