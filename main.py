@@ -84,6 +84,8 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
             or [{"nom": seulement}]
     r = cfg.get("recuperation", {})
     dossier = RACINE / cfg.get("dossier_sortie", "clips")
+    # dossier des vidéos finies (ex: galerie du téléphone). Vide = à côté des bruts.
+    final = os.environ.get("DOSSIER_FINAL") or cfg.get("dossier_final") or ""
     faits = lire_etat()
     ecrire_etat(faits)  # le fichier existe toujours (cache GitHub Actions)
 
@@ -114,8 +116,9 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
                 if montage:
                     fc = choisir_facecam(s.get("facecam", "auto"), brut,
                                          base / "bruts" / f"{nom}_facecam.jpg")
-                    sortie = monter(brut, base / f"{nom}_9x16.mp4", cfg, fc, c["title"])
-                    print(f"  ✓ monté : {sortie.relative_to(RACINE)}")
+                    dest = Path(final) / u["login"] if final else base
+                    sortie = monter(brut, dest / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
+                    print(f"  ✓ monté : {sortie}")
                     if telegram.actif():
                         telegram.envoyer(sortie, f"🎬 {u['display_name']} : {c['title']}\n"
                                                  f"{c['view_count']} vues · {c['url']}")

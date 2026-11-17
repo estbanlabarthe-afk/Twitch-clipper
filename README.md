@@ -47,6 +47,70 @@ Pour changer les streamers : modifie `config.yaml` directement sur github.com.
 **Coût** : 0 €. Le repo privé a 2000 min/mois gratuites ; une passe sans clip ≈ 1 min, un clip ≈ 1-2 min. Avec 5 clips max par passe toutes les 2 h, ça tient. Suivi : Settings → Billing → Usage.
 Si tu dépasses, GitHub met juste en pause jusqu'au mois suivant (pas de facture, sauf si tu as ajouté un moyen de paiement + un budget).
 
+## Sur un téléphone Android 24h/24 (Termux) 📱
+
+Gratuit et illimité. Les vidéos finies arrivent dans **Movies/TwitchClipper** (galerie / appli Fichiers).
+Téléphone **branché**, idéalement un vieux qui ne sert plus.
+
+### A. Préparer Termux (une seule fois)
+1. Installe **Termux depuis F-Droid** (f-droid.org). Pas la version du Play Store, elle est périmée.
+2. Paramètres Android → Applis → Termux → Batterie → **Sans restriction**.
+3. Dans Termux, tape ces commandes une par une :
+```
+pkg update -y
+```
+```
+pkg install -y proot-distro git
+```
+```
+termux-setup-storage
+```
+(accepte l'autorisation d'accès aux fichiers)
+```
+proot-distro install ubuntu
+```
+
+### B. Installer le script dans Ubuntu
+Le repo est privé : crée d'abord un **jeton GitHub** sur github.com → Settings → Developer settings → Personal access tokens → Fine-grained → accès au repo `Twitch-clipper`, permission **Contents : Read-only**. Copie-le.
+```
+proot-distro login ubuntu
+```
+```
+apt update && apt install -y git
+```
+```
+git config --global credential.helper store
+```
+```
+cd /root && git clone https://github.com/estbanlabarthe-afk/Twitch-clipper
+```
+(identifiant = ton pseudo GitHub, mot de passe = **le jeton**)
+```
+bash /root/Twitch-clipper/termux/installer.sh
+```
+Puis mets tes clés Twitch (et Telegram si tu veux) :
+```
+nano /root/Twitch-clipper/.env
+```
+(Ctrl+O pour enregistrer, Ctrl+X pour quitter), puis sors d'Ubuntu :
+```
+exit
+```
+
+### C. Lancer (à chaque fois)
+La 1re fois, copie le lanceur dans Termux :
+```
+cp $PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu/root/Twitch-clipper/termux/lancer.sh ~/
+```
+Ensuite, pour démarrer :
+```
+bash ~/lancer.sh
+```
+Ça tourne en boucle (toutes les 10 min) tant que Termux est ouvert. Pour arrêter : Ctrl+C.
+Tu peux fermer l'écran, laisse juste Termux en arrière-plan (la notif Termux doit rester).
+
+Pour changer les streamers : modifie `config.yaml` sur github.com, le lanceur fait `git pull` à chaque démarrage.
+
 ## Utilisation sur ton PC
 
 Mets tes streamers dans `config.yaml`, puis :

@@ -13,6 +13,7 @@ Récupérer automatiquement les clips Twitch les plus récents (option : les plu
 - `clipper/sous_titres.py` : faster-whisper + fichier .ass karaoké + mention pub
 - `clipper/telegram.py` : envoi des clips montés sur Telegram
 - `.github/workflows/clipper.yml` : mode auto, toutes les 2 h sur GitHub Actions (gratuit, 2000 min/mois)
+- `termux/` : installation + lanceur pour un téléphone Android (vidéos finies dans /sdcard/Movies/TwitchClipper via DOSSIER_FINAL)
 - `config.yaml` : streamers, réglages ; `.env` : clés Twitch (jamais commitées)
 
 ## Règles

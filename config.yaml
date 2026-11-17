@@ -13,7 +13,9 @@ recuperation:
   tri: recents           # recents = les plus récents d'abord ; vues = les plus vus
   vues_min: 0            # ignore les clips sous ce nombre de vues
 
-dossier_sortie: clips
+dossier_sortie: clips      # clips bruts + infos
+# Vidéos finies ailleurs (ex: galerie du téléphone "/sdcard/Movies/TwitchClipper"). Vide = dans clips/.
+dossier_final: ""
 
 # Bande violette avec le titre du clip (entre la cam et le jeu)
 titre:
