@@ -168,7 +168,10 @@ def traiter(c: dict, u: dict, s: dict, cfg: dict, etat: dict, montage: bool = Tr
     """Télécharge + monte un clip, range la vidéo, met à jour la mémoire."""
     dossier = RACINE / cfg.get("dossier_sortie", "clips")
     # dossier des vidéos finies (ex: galerie du téléphone). Vide = à côté des bruts.
-    final = os.environ.get("DOSSIER_FINAL") or cfg.get("dossier_final") or ""
+    # la config gagne (si ce dossier existe sur cet appareil), sinon la variable du lanceur
+    final = cfg.get("dossier_final") or ""
+    if not final or not Path(final).parent.exists():
+        final = os.environ.get("DOSSIER_FINAL") or ""
     jour = c["created_at"][:10]
     heure = c["created_at"][11:16].replace(":", "h")
     nom = f"{'MOI_' if a_moi else ''}{heure}_{slug(c['title'])}_{c['id'][:8]}"
@@ -185,7 +188,7 @@ def traiter(c: dict, u: dict, s: dict, cfg: dict, etat: dict, montage: bool = Tr
         print(f"  ✓ téléchargé : {brut.name}")
         sortie = None
         if not montage and final:
-            dest = Path(final) / u["login"]
+            dest = Path(final) / u["login"] if cfg.get("sous_dossier_streamer", True) else Path(final)
             dest.mkdir(parents=True, exist_ok=True)
             sortie = Path(shutil.move(str(brut), str(dest / f"{jour}_{brut.name}")))
             print(f"  ✓ rangé (sans montage) : {sortie}")
@@ -196,7 +199,7 @@ def traiter(c: dict, u: dict, s: dict, cfg: dict, etat: dict, montage: bool = Tr
             # non vidéo dans Movies), puis on déplace juste la vidéo finie
             sortie = monter(brut, base / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
             if final:
-                dest = Path(final) / u["login"]
+                dest = Path(final) / u["login"] if cfg.get("sous_dossier_streamer", True) else Path(final)
                 dest.mkdir(parents=True, exist_ok=True)
                 sortie = Path(shutil.move(str(sortie), str(dest / sortie.name)))
             if not cfg.get("garder_bruts", True):

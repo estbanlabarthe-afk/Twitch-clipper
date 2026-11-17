@@ -18,7 +18,8 @@ recuperation:
 
 dossier_sortie: clips      # clips bruts + infos
 # Vidéos finies ailleurs (ex: galerie du téléphone "/sdcard/Movies/TwitchClipper"). Vide = dans clips/.
-dossier_final: ""
+dossier_final: "/sdcard/Download"
+sous_dossier_streamer: false   # true = un sous-dossier par streamer
 garder_bruts: false        # false = supprime le clip original une fois monté (gain de place)
 
 # Bande violette avec le titre du clip (entre la cam et le jeu)
