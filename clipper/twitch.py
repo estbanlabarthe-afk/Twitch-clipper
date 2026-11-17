@@ -43,6 +43,16 @@ class Twitch:
         data = self._get("/users", {"login": [l.lower() for l in logins]})["data"]
         return {u["login"].lower(): u for u in data}
 
+    def utilisateurs_par_id(self, ids: list[str]) -> dict[str, dict]:
+        data = self._get("/users", {"id": ids})["data"]
+        return {u["id"]: u for u in data}
+
+    def clips_par_id(self, ids: list[str]) -> list[dict]:
+        """Infos de clips précis (100 max), dans l'ordre demandé."""
+        data = self._get("/clips", {"id": ids[:100]})["data"]
+        ordre = {i: n for n, i in enumerate(ids)}
+        return sorted(data, key=lambda c: ordre.get(c["id"], 999))
+
     def en_live(self, user_ids: list[str]) -> set[str]:
         data = self._get("/streams", {"user_id": user_ids, "type": "live"})["data"]
         return {s["user_id"] for s in data}

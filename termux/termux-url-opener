@@ -1,0 +1,33 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Appli Twitch > Partager > Termux  =>  le clip est monté et rangé dans la galerie.
+# (Termux lance ce script tout seul avec le lien partagé.)
+FILE=/sdcard/Download/.twitchclipper_liens.txt
+LOCK=$HOME/.twitchclipper_lock
+
+echo "$*" >> "$FILE"
+# verrou oublié (Termux tué pendant un montage) : on le retire au bout de 30 min
+find "$LOCK" -maxdepth 0 -mmin +30 -exec rmdir {} \; 2>/dev/null
+if ! mkdir "$LOCK" 2>/dev/null; then
+  echo "➕ Ajouté à la file d'attente (un montage est déjà en cours dans une autre fenêtre)."
+  sleep 4
+  exit 0
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+termux-wake-lock 2>/dev/null || true
+
+while [ -s "$FILE" ]; do
+  mv "$FILE" "$FILE.encours"
+  proot-distro login ubuntu -- bash -c '
+    cd /root/Twitch-clipper || exit 1
+    git pull -q 2>/dev/null
+    . .venv/bin/activate
+    export WHISPER_MODELE=base DOSSIER_FINAL=/sdcard/Movies/TwitchClipper
+    python main.py --lien $(cat /sdcard/Download/.twitchclipper_liens.txt.encours)
+  '
+  rm -f "$FILE.encours"
+done
+
+termux-wake-unlock 2>/dev/null || true
+echo
+echo "✅ Fini ! Vidéo(s) dans Mes fichiers > Movies > TwitchClipper. Tu peux fermer."
+read -r -t 60 _ || true

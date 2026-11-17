@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Si l'appli partage du TEXTE (« Regarde ce clip… https://… ») au lieu d'un lien seul,
+# Termux l'enregistre dans un fichier et lance ce script : on en sort le lien.
+exec "$HOME/bin/termux-url-opener" "$(cat "$1")"

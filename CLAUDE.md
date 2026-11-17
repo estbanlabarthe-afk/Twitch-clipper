@@ -3,6 +3,8 @@
 Projet perso d'Esteban, **séparé d'Esteb'Ant** (ne rien mélanger avec ce repo-là).
 
 ## But
+**Mode actuel (choisi par Esteban) : manuel.** Seuls les clips qu'il partage (Twitch > Partager > Termux, ou `--lien`) sont montés. Le mode auto (`lancer.sh`, GitHub Actions) reste dispo mais n'est pas utilisé.
+
 Récupérer automatiquement les clips Twitch les plus récents (option : les plus vus) de streamers choisis, et les monter en 9:16 pour TikTok / Shorts. Esteban vérifie et poste à la main.
 
 ## Structure

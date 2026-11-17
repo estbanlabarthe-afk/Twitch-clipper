@@ -46,6 +46,23 @@ Pour changer les streamers : modifie `config.yaml` directement sur github.com.
 
 **Coût** : 0 €, illimité (repo public). ⚠️ GitHub met en pause les tâches automatiques d'un repo public après 60 jours sans aucun commit : si ça arrive, onglet Actions → « Enable workflow ».
 
+## Mode manuel : seulement les clips que tu choisis ⭐
+
+Dans l'appli Twitch : ouvre un clip → **Partager** → **Termux**. Le clip est monté et rangé dans **Movies/TwitchClipper**.
+Tu peux en partager plusieurs à la suite : ils passent en file d'attente.
+
+Installation (une fois, dans **Termux**, après la partie B ci-dessous) :
+```
+proot-distro login ubuntu -- bash -c "cd /root/Twitch-clipper && git pull"
+```
+```
+proot-distro login ubuntu -- cat /root/Twitch-clipper/termux/installer-partage.sh > ~/p.sh
+```
+```
+bash ~/p.sh
+```
+Sans le partage, avec un lien copié : `python main.py --lien <lien>` (dans Ubuntu).
+
 ## Sur un téléphone Android 24h/24 (Termux) 📱
 
 Gratuit et illimité. Les vidéos finies arrivent dans **Movies/TwitchClipper** (galerie / appli Fichiers).

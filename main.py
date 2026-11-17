@@ -114,9 +114,6 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
         streamers = [s for s in streamers if s["nom"].lower() == seulement.lower()] \
             or [{"nom": seulement}]
     r = cfg.get("recuperation", {})
-    dossier = RACINE / cfg.get("dossier_sortie", "clips")
-    # dossier des vidéos finies (ex: galerie du téléphone). Vide = à côté des bruts.
-    final = os.environ.get("DOSSIER_FINAL") or cfg.get("dossier_final") or ""
     etat = lire_etat()
     faits = etat["ids"]
     ecrire_etat(etat)  # le fichier existe toujours (cache GitHub Actions)
@@ -163,42 +160,90 @@ def une_passe(tw: Twitch, cfg: dict, seulement: str | None, montage: bool):
             print(f"  · {doublons} doublon(s) ignoré(s) (même moment déjà clippé)")
 
         for c in clips:
-            jour = c["created_at"][:10]
-            heure = c["created_at"][11:16].replace(":", "h")
-            nom = f"{'MOI_' if a_moi(c) else ''}{heure}_{slug(c['title'])}_{c['id'][:8]}"
-            if a_moi(c):
-                print(f"  ⭐ ton clip : {c['title']}")
-            base = dossier / u["login"] / jour
-            try:
-                brut = telecharger(c["url"], base / "bruts" / f"{nom}.mp4")
-                (base / "bruts" / f"{nom}.json").write_text(json.dumps({
-                    "titre": c["title"], "url": c["url"], "vues": c["view_count"],
-                    "streamer": u["display_name"], "cree_par": c["creator_name"],
-                    "date": c["created_at"], "duree": c["duration"],
-                }, ensure_ascii=False, indent=2), encoding="utf-8")
-                print(f"  ✓ téléchargé : {brut.name}")
-                if montage:
-                    fc = choisir_facecam(s.get("facecam", "auto"), brut,
-                                         base / "bruts" / f"{nom}_facecam.jpg")
-                    # montage dans le dossier du script (Android interdit les fichiers
-                    # non vidéo dans Movies), puis on déplace juste la vidéo finie
-                    sortie = monter(brut, base / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
-                    if final:
-                        dest = Path(final) / u["login"]
-                        dest.mkdir(parents=True, exist_ok=True)
-                        sortie = Path(shutil.move(str(sortie), str(dest / sortie.name)))
-                    if not cfg.get("garder_bruts", True):
-                        brut.unlink(missing_ok=True)  # libère de la place
-                    print(f"  ✓ monté : {sortie}")
-                    if telegram.actif():
-                        telegram.envoyer(sortie, f"🎬 {u['display_name']} : {c['title']}\n"
-                                                 f"{c['view_count']} vues · {c['url']}")
-                        print("  ✓ envoyé sur Telegram")
-                faits.add(c["id"])
-                etat["moments"].append(moment(c, u["id"]))
-                ecrire_etat(etat)
-            except Exception as e:  # un clip raté ne doit pas tout arrêter
-                print(f"  ✗ {c['id']} : {e}")
+            traiter(c, u, s, cfg, etat, montage, a_moi(c))
+
+
+def traiter(c: dict, u: dict, s: dict, cfg: dict, etat: dict, montage: bool = True,
+            a_moi: bool = False) -> Path | None:
+    """Télécharge + monte un clip, range la vidéo, met à jour la mémoire."""
+    dossier = RACINE / cfg.get("dossier_sortie", "clips")
+    # dossier des vidéos finies (ex: galerie du téléphone). Vide = à côté des bruts.
+    final = os.environ.get("DOSSIER_FINAL") or cfg.get("dossier_final") or ""
+    jour = c["created_at"][:10]
+    heure = c["created_at"][11:16].replace(":", "h")
+    nom = f"{'MOI_' if a_moi else ''}{heure}_{slug(c['title'])}_{c['id'][:8]}"
+    if a_moi:
+        print(f"  ⭐ ton clip : {c['title']}")
+    base = dossier / u["login"] / jour
+    try:
+        brut = telecharger(c["url"], base / "bruts" / f"{nom}.mp4")
+        (base / "bruts" / f"{nom}.json").write_text(json.dumps({
+            "titre": c["title"], "url": c["url"], "vues": c["view_count"],
+            "streamer": u["display_name"], "cree_par": c["creator_name"],
+            "date": c["created_at"], "duree": c["duration"],
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  ✓ téléchargé : {brut.name}")
+        sortie = None
+        if montage:
+            fc = choisir_facecam(s.get("facecam", "auto"), brut,
+                                 base / "bruts" / f"{nom}_facecam.jpg")
+            # montage dans le dossier du script (Android interdit les fichiers
+            # non vidéo dans Movies), puis on déplace juste la vidéo finie
+            sortie = monter(brut, base / f"{jour}_{nom}_9x16.mp4", cfg, fc, c["title"])
+            if final:
+                dest = Path(final) / u["login"]
+                dest.mkdir(parents=True, exist_ok=True)
+                sortie = Path(shutil.move(str(sortie), str(dest / sortie.name)))
+            if not cfg.get("garder_bruts", True):
+                brut.unlink(missing_ok=True)  # libère de la place
+            print(f"  ✓ monté : {sortie}")
+            if telegram.actif():
+                telegram.envoyer(sortie, f"🎬 {u['display_name']} : {c['title']}\n"
+                                         f"{c['view_count']} vues · {c['url']}")
+                print("  ✓ envoyé sur Telegram")
+        etat["ids"].add(c["id"])
+        etat["moments"].append(moment(c, u["id"]))
+        ecrire_etat(etat)
+        return sortie
+    except Exception as e:  # un clip raté ne doit pas tout arrêter
+        print(f"  ✗ {c['id']} : {e}")
+        return None
+
+
+LIEN_CLIP = re.compile(r"(?:clips\.twitch\.tv/(?:embed\?clip=)?|twitch\.tv/[^/\s]+/clip/)([A-Za-z0-9_-]+)")
+
+
+def depuis_liens(tw: Twitch, cfg: dict, textes: list[str], forcer: bool = False):
+    """Monte uniquement les clips dont on donne le lien (texte partagé, URL...)."""
+    ids = []
+    for texte in textes:
+        for slug_clip in LIEN_CLIP.findall(texte):
+            if slug_clip not in ids:
+                ids.append(slug_clip)
+    if not ids:
+        print("✗ Aucun lien de clip Twitch reconnu dans :", " ".join(textes)[:200])
+        return
+    etat = lire_etat()
+    clips = tw.clips_par_id(ids)
+    trouves = {c["id"] for c in clips}
+    for i in ids:
+        if i not in trouves:
+            print(f"✗ clip introuvable (supprimé ou lien faux) : {i}")
+    if not clips:
+        return
+    users = tw.utilisateurs_par_id(list({c["broadcaster_id"] for c in clips}))
+    reglages = {s["nom"].lower(): s for s in normaliser_streamers(cfg.get("streamers"))}
+    moi = {p.lower().strip() for p in str(cfg.get("mon_pseudo") or "").split(",") if p.strip()}
+    for n, c in enumerate(clips, 1):
+        u = users.get(c["broadcaster_id"]) or {"id": c["broadcaster_id"],
+                                               "login": slug(c["broadcaster_name"]),
+                                               "display_name": c["broadcaster_name"]}
+        print(f"→ [{n}/{len(clips)}] {u['display_name']} : {c['title']}")
+        if c["id"] in etat["ids"] and not forcer:
+            print("  · déjà monté avant (ajoute --forcer pour le refaire)")
+            continue
+        traiter(c, u, reglages.get(u["login"].lower(), {}), cfg, etat, True,
+                (c.get("creator_name") or "").lower() in moi)
 
 
 def main():
@@ -209,6 +254,9 @@ def main():
     p.add_argument("--boucle", type=float, metavar="MIN", help="relance toutes les MIN minutes")
     p.add_argument("--sans-montage", action="store_true")
     p.add_argument("--fichier", help="monte un fichier local au lieu d'aller sur Twitch")
+    p.add_argument("--lien", nargs="+", metavar="LIEN",
+                   help="monte seulement ces clips (liens Twitch, ou texte partagé qui en contient)")
+    p.add_argument("--forcer", action="store_true", help="avec --lien : refait même si déjà monté")
     p.add_argument("--titre", default="", help="titre affiché dans la bande (avec --fichier)")
     p.add_argument("--telegram-id", action="store_true",
                    help="affiche ton TELEGRAM_CHAT_ID (après avoir écrit à ton bot)")
@@ -241,6 +289,10 @@ def main():
     if not cid or not secret:
         sys.exit("Il manque TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET dans .env (voir README)")
     tw = Twitch(cid, secret)
+
+    if a.lien:
+        depuis_liens(tw, cfg, a.lien, a.forcer)
+        return
 
     while True:
         print(f"\n=== {datetime.now():%H:%M:%S} ===")
