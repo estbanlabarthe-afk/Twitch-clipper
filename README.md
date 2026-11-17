@@ -100,7 +100,7 @@ exit
 ### C. Lancer (à chaque fois)
 La 1re fois, copie le lanceur dans Termux :
 ```
-cp $PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu/root/Twitch-clipper/termux/lancer.sh ~/
+proot-distro login ubuntu -- cat /root/Twitch-clipper/termux/lancer.sh > ~/lancer.sh
 ```
 Ensuite, pour démarrer :
 ```

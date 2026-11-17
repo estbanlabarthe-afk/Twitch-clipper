@@ -6,6 +6,10 @@ MINUTES="${1:-10}"
 proot-distro login ubuntu -- bash -c "
   cd /root/Twitch-clipper || exit 1
   git pull -q || echo '(pas de mise à jour : pas de réseau ?)'
+  if [ ! -f .venv/bin/activate ]; then
+    echo '✗ Installation pas faite. Tape : proot-distro login ubuntu   puis : bash /root/Twitch-clipper/termux/installer.sh'
+    exit 1
+  fi
   . .venv/bin/activate
   export WHISPER_MODELE=base
   export DOSSIER_FINAL=/sdcard/Movies/TwitchClipper
