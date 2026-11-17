@@ -4,6 +4,10 @@
 set -e
 cd "$(dirname "$0")/.."
 echo "== Paquets système (ffmpeg, python...) =="
+# pas de questions pendant l'installation (fuseau horaire = Paris)
+export DEBIAN_FRONTEND=noninteractive TZ=Europe/Paris
+ln -snf /usr/share/zoneinfo/Europe/Paris /etc/localtime 2>/dev/null || true
+echo "Europe/Paris" > /etc/timezone
 apt-get update -qq
 apt-get install -y -qq python3 python3-venv python3-pip ffmpeg git fonts-liberation > /dev/null
 echo "== Environnement Python =="
